@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Recognition AI Agent</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        button {
+            font-size: 18px;
+            padding: 10px 20px;
+            margin: 20px;
+            cursor: pointer;
+        }
+        #response {
+            font-size: 18px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>AI Voice Assistant</h1>
+    <button onclick="startRecognition()">Start Speaking</button>
+    <div id="response"></div>
+
+    <script>
+        // Check if the browser supports SpeechRecognition
+        if ('webkitSpeechRecognition' in window) {
+            const recognition = new webkitSpeechRecognition();
+            recognition.continuous = true;  // Continuously listen for input
+            recognition.interimResults = false;  // Get final results only
+            recognition.lang = 'en-US';  // Language set to English
+
+            recognition.onstart = function() {
+                document.getElementById('response').innerHTML = "Listening...";
+            };
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[event.results.length - 1][0].transcript;
+                document.getElementById('response').innerHTML = "You said: " + transcript;
+
+                processVoiceInput(transcript);
+            };
+
+            recognition.onerror = function(event) {
+                document.getElementById('response').innerHTML = "Error occurred: " + event.error;
+            };
+
+            recognition.onend = function() {
+                document.getElementById('response').innerHTML += "<br>Listening ended.";
+            };
+
+            // Start speech recognition
+            function startRecognition() {
+                recognition.start();
+            }
+
+            // Process voice input and give AI response
+            function processVoiceInput(input) {
+                let response = "";
+                if (input.includes("weather")) {
+                    response = "The weather is sunny today!";
+                } else if (input.includes("hello")) {
+                    response = "Hi there! How can I assist you?";
+                } else if (input.includes("joke")) {
+                    response = "Why don't scientists trust atoms? Because they make up everything!";
+                } else {
+                    response = "Sorry, I didn't understand that. Can you ask something else?";
+                }
+
+                // Convert the response to speech
+                speakResponse(response);
+            }
+
+            // Speech Synthesis: Converts text to speech
+            function speakResponse(text) {
+                const speechSynthesis = window.speechSynthesis;
+                const utterance = new SpeechSynthesisUtterance(text);
+                speechSynthesis.speak(utterance);
+            }
+        } else {
+            document.getElementById('response').innerHTML = "Sorry, your browser does not support voice recognition.";
+        }
+    </script>
+</body>
+</html>
