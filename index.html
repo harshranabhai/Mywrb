@@ -1,90 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice Recognition AI Agent</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-        }
-        button {
-            font-size: 18px;
-            padding: 10px 20px;
-            margin: 20px;
-            cursor: pointer;
-        }
-        #response {
-            font-size: 18px;
-            margin-top: 20px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Assistant</title>
 </head>
 <body>
-    <h1>AI Voice Assistant</h1>
-    <button onclick="startRecognition()">Start Speaking</button>
-    <div id="response"></div>
 
-    <script>
-        // Check if the browser supports SpeechRecognition
-        if ('webkitSpeechRecognition' in window) {
-            const recognition = new webkitSpeechRecognition();
-            recognition.continuous = true;  // Continuously listen for input
-            recognition.interimResults = false;  // Get final results only
-            recognition.lang = 'en-US';  // Language set to English
+  <h1>Weather Assistant</h1>
+  <button onclick="startListening()">Ask about the weather</button>
+  <p id="weather-info">The weather information will appear here.</p>
 
-            recognition.onstart = function() {
-                document.getElementById('response').innerHTML = "Listening...";
-            };
+  <script>
+    // Set your OpenWeatherMap API key here
+    const apiKey = '13db3bd15961326c0788a5d6725ef0bb'; // Get it from https://openweathermap.org/api
+    const baseUrl = 'https://api.openweathermap.org/data/2.5/weather';
 
-            recognition.onresult = function(event) {
-                const transcript = event.results[event.results.length - 1][0].transcript;
-                document.getElementById('response').innerHTML = "You said: " + transcript;
+    // Speech synthesis setup
+    const synth = window.speechSynthesis;
 
-                processVoiceInput(transcript);
-            };
+    // Start listening for speech input
+    function startListening() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'en-US';
+      recognition.start();
 
-            recognition.onerror = function(event) {
-                document.getElementById('response').innerHTML = "Error occurred: " + event.error;
-            };
+      recognition.onresult = function(event) {
+        const speech = event.results[0][0].transcript.toLowerCase();
+        console.log('Heard:', speech);
 
-            recognition.onend = function() {
-                document.getElementById('response').innerHTML += "<br>Listening ended.";
-            };
-
-            // Start speech recognition
-            function startRecognition() {
-                recognition.start();
-            }
-
-            // Process voice input and give AI response
-            function processVoiceInput(input) {
-                let response = "";
-                if (input.includes("weather")) {
-                    response = "The weather is sunny today!";
-                } else if (input.includes("hello")) {
-                    response = "Hi there! How can I assist you?";
-                } else if (input.includes("joke")) {
-                    response = "Why don't scientists trust atoms? Because they make up everything!";
-                } else {
-                    response = "Sorry, I didn't understand that. Can you ask something else?";
-                }
-
-                // Convert the response to speech
-                speakResponse(response);
-            }
-
-            // Speech Synthesis: Converts text to speech
-            function speakResponse(text) {
-                const speechSynthesis = window.speechSynthesis;
-                const utterance = new SpeechSynthesisUtterance(text);
-                speechSynthesis.speak(utterance);
-            }
+        // If the user asks for the weather
+        if (speech.includes('weather') || speech.includes('forecast')) {
+          let city = speech.split('in ')[1] || speech.split('for ')[1];
+          city = city ? city.trim() : 'New York'; // Default city if none is provided
+          getWeather(city);
         } else {
-            document.getElementById('response').innerHTML = "Sorry, your browser does not support voice recognition.";
+          speak('Sorry, I didn\'t understand that.');
         }
-    </script>
+      };
+
+      recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event);
+      };
+    }
+
+    // Fetch weather data from OpenWeatherMap API
+    async function getWeather(city) {
+      const url = `${baseUrl}?q=${city}&appid=${apiKey}&units=metric`;
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.cod === 200) {
+          const weatherDescription = data.weather[0].description;
+          const temperature = data.main.temp;
+          const weatherInfo = `The current weather in ${city} is ${weatherDescription} with a temperature of ${temperature} degrees Celsius.`;
+          document.getElementById('weather-info').textContent = weatherInfo;
+          speak(weatherInfo);
+        } else {
+          const errorMessage = `I couldn't find the weather for ${city}. Please try again.`;
+          speak(errorMessage);
+        }
+      } catch (error) {
+        console.error('Error fetching weather data:', error);
+        speak('Sorry, I am having trouble fetching the weather information right now.');
+      }
+    }
+
+    // Function to make the assistant speak
+    function speak(text) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      synth.speak(utterance);
+    }
+  </script>
+
 </body>
 </html>
