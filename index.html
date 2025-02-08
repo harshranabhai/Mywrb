@@ -35,7 +35,7 @@
           city = city ? city.trim() : 'New York'; // Default city if none is provided
           getWeather(city);
         } else {
-          speak('Sorry, I didn\'t understand that.');
+          speak('Sorry, I didn\'t understand that. Can you ask about the weather?');
         }
       };
 
@@ -53,13 +53,19 @@
         const data = await response.json();
 
         if (data.cod === 200) {
+          // Extract weather information
           const weatherDescription = data.weather[0].description;
           const temperature = data.main.temp;
           const weatherInfo = `The current weather in ${city} is ${weatherDescription} with a temperature of ${temperature} degrees Celsius.`;
+          
+          // Display weather info on the webpage
           document.getElementById('weather-info').textContent = weatherInfo;
+          
+          // Speak out the weather info
           speak(weatherInfo);
         } else {
-          const errorMessage = `I couldn't find the weather for ${city}. Please try again.`;
+          const errorMessage = `Sorry, I couldn't find the weather for ${city}. Please try again.`;
+          document.getElementById('weather-info').textContent = errorMessage;
           speak(errorMessage);
         }
       } catch (error) {
@@ -76,4 +82,5 @@
   </script>
 
 </body>
-</html>
+  </html>
+  
